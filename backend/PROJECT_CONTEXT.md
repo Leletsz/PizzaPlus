@@ -108,16 +108,24 @@ backend/
 │   │   │   ├── CreateUserController.ts
 │   │   │   ├── AuthUserController.ts
 │   │   │   └── DetailUserController.ts
-│   │   └── category/
-│   │       └── CreateCategoryController.ts
+│   │   ├── category/
+│   │   │   ├── CreateCategoryController.ts
+│   │   │   └── ListCategoryController.ts
+│   │   └── product/
+│   │       ├── CreateProductController.ts
+│   │       └── ListProductController.ts
 │   │
 │   ├── services/
 │   │   ├── user/
 │   │   │   ├── CreateUserService.ts
 │   │   │   ├── AuthUserService.ts
 │   │   │   └── DetailUserService.ts
-│   │   └── category/
-│   │       └── CreateCategoryService.ts
+│   │   ├── category/
+│   │   │   ├── CreateCategoryService.ts
+│   │   │   └── ListCategoryService.ts
+│   │   └── product/
+│   │       ├── CreateProductService.ts
+│   │       └── ListProductService.ts
 │   │
 │   ├── middlewares/
 │   │   ├── isAuthenticated.ts  # Verifica JWT no header Authorization
@@ -126,7 +134,12 @@ backend/
 │   │
 │   ├── schemas/
 │   │   ├── userSchema.ts       # Schemas Zod para criação e autenticação de usuário
-│   │   └── categorySchema.ts   # Schema Zod para criação de categoria
+│   │   ├── categorySchema.ts   # Schema Zod para criação de categoria
+│   │   └── productSchema.ts    # Schema Zod para criação de produto
+│   │
+│   ├── config/
+│   │   ├── multer.ts           # Configuração do Multer (upload em memória)
+│   │   └── cloudinary.ts       # Configuração do client Cloudinary
 │   │
 │   ├── prisma/
 │   │   └── index.ts            # Instância singleton do PrismaClient
@@ -279,6 +292,39 @@ Base URL: `http://localhost:<PORT>`
 
 ---
 
+### Produtos
+
+| Método | Rota | Middlewares | Descrição |
+|---|---|---|---|
+| POST | `/product` | `isAuthenticated`, `isAdmin`, `upload.single("file")`, `validateSchema(createProductSchema)` | Cria um novo produto com upload de imagem |
+| GET | `/products` | `isAuthenticated`, `validateSchema(listProductSchema)` | Lista produtos filtrados por `disabled` |
+
+#### `POST /product`
+- **Header:** `Authorization: Bearer <token>` (obrigatório, role ADMIN)
+- **Body:** `multipart/form-data` com os campos:
+  - `name` — nome do produto
+  - `price` — preço em centavos (string numérica, convertida para `Int` no service)
+  - `description` — descrição do produto
+  - `category_id` — UUID da categoria
+  - `file` — arquivo de imagem do produto
+- **Resposta:** `{ id, name, price, description, banner, category_id }`
+- **Erros:** Sem token → 401 / Não é ADMIN → 401 / Sem arquivo → 400 / Categoria inválida → 400
+
+> **Observação:** O campo `banner` é a URL pública retornada pelo Cloudinary após o upload. O `price` é enviado como string no formulário e convertido para `Int` (centavos) com `parseInt()` no service.
+
+#### `GET /products`
+- **Header:** `Authorization: Bearer <token>` (obrigatório)
+- **Query Params:**
+  - `disabled` — `"true"` ou `"false"` *(opcional, padrão: `false`)*
+- **Exemplos:**
+  - `/products` → lista produtos com `disabled = false` (padrão)
+  - `/products?disabled=false` → produtos ativos
+  - `/products?disabled=true` → produtos desativados
+- **Resposta:** Array de produtos `[{ id, name, price, description, banner, disabled, category_id }]` ordenados por nome
+- **Erros:** Sem token → 401 / `disabled` inválido → 400
+
+---
+
 ## 8. Middlewares
 
 ### `isAuthenticated`
@@ -366,6 +412,33 @@ z.object({
 })
 ```
 
+### `createProductSchema`
+**Arquivo:** `src/schemas/productSchema.ts`
+
+```ts
+z.object({
+  body: z.object({
+    name: z.string().min(1, "Nome é obrigatório"),
+    price: z.string().min(1, "Preço é obrigatório").regex(/^\d+$/), // string numérica
+    description: z.string().min(1, "Descrição é obrigatória"),
+    category_id: z.string().min(1, "Categoria é obrigatória"),
+  }),
+})
+```
+
+> O campo `file` (imagem) é tratado pelo **Multer** antes do middleware de validação, por isso não aparece no schema Zod.
+
+### `listProductSchema`
+**Arquivo:** `src/schemas/productSchema.ts`
+
+```ts
+z.object({
+  query: z.object({
+    disabled: z.enum(["true", "false"]).optional(), // padrão tratado no controller
+  }),
+})
+```
+
 ---
 
 ## 10. Autenticação JWT
@@ -433,6 +506,33 @@ declare namespace Express {
   }
 }
 ```
+
+---
+
+## 15. Upload de Imagens (Multer + Cloudinary)
+
+### Multer
+**Arquivo:** `src/config/multer.ts`
+
+- **Storage:** `memoryStorage()` — o arquivo é mantido em memória como `Buffer` e **não** salvo em disco
+- O arquivo fica disponível em `req.file` (campo `file` no formulário)
+- Usado via `upload.single("file")` no middleware da rota
+
+### Cloudinary
+**Arquivo:** `src/config/cloudinary.ts`
+
+- Client oficial `cloudinary` configurado com as credenciais via variáveis de ambiente
+- Upload feito via `upload_stream` no `CreateProductService`, transformando o `Buffer` em `Readable` antes de enviar
+- Imagens são armazenadas na pasta `products/` do Cloudinary
+- A URL pública (`secure_url`) é salva no campo `banner` do produto no banco
+
+**Variáveis de ambiente necessárias:**
+
+| Variável | Descrição |
+|---|---|
+| `CLOUDINARY_CLOUD_NAME` | Nome da cloud no Cloudinary |
+| `CLOUDINARY_API_KEY` | Chave de API |
+| `CLOUDINARY_API_SECRET` | Segredo da API |
 
 ---
 
