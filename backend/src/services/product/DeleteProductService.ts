@@ -7,7 +7,7 @@ interface DeleteProductServiceProps {
 class DeleteProductService {
     async execute({ id }: DeleteProductServiceProps) {
         try {
-            const product = await prismaClient.product.update({
+            await prismaClient.product.update({
                 where: {
                     id: id,
                 },

@@ -12,7 +12,8 @@ import { isAdmin } from "./middlewares/isAdmin";
 import { createCategorySchema } from "./schemas/categorySchema";
 import { CreateProductController } from "./controllers/product/CreateProductController";
 import { ListProductController } from "./controllers/product/ListProductController";
-import { createProductSchema, listProductSchema } from "./schemas/productSchema";
+import { ListProductByCategoryController } from "./controllers/product/ListProductByCategoryController";
+import { createProductSchema, listProductSchema, listProductByCategorySchema } from "./schemas/productSchema";
 import { DeleteProductController } from "./controllers/product/DeleteProductController";
 import uploadConfig from "./config/multer";
 
@@ -47,5 +48,7 @@ router.post("/product", isAuthenticated, isAdmin, upload.single("file"), validat
 router.get("/products", isAuthenticated, validateSchema(listProductSchema), new ListProductController().handle)
 
 router.delete("/product", isAuthenticated, isAdmin, new DeleteProductController().handle)
+
+router.get("/category/product", isAuthenticated, validateSchema(listProductByCategorySchema), new ListProductByCategoryController().handle)
 
 export { router };
