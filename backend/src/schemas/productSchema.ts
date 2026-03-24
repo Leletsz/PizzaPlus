@@ -11,9 +11,7 @@ const createProductSchema = z.object({
 
 const listProductSchema = z.object({
     query: z.object({
-        disabled: z.enum(["true", "false"], {
-            message: "O parâmetro disabled deve ser 'true' ou 'false'",
-        }).optional(),
+        disabled: z.string().optional()
     })
 })
 

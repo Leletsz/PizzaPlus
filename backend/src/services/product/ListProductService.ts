@@ -1,30 +1,40 @@
 import prismaClient from "../../prisma/index";
 
 interface ListProductServiceProps {
-  disabled: boolean;
+  disabled?: string;
 }
 
 class ListProductService {
   async execute({ disabled }: ListProductServiceProps) {
-    const products = await prismaClient.product.findMany({
-      where: {
-        disabled: disabled,
-      },
-      select: {
-        id: true,
-        name: true,
-        price: true,
-        description: true,
-        banner: true,
-        disabled: true,
-        category_id: true,
-      },
-      orderBy: {
-        name: "asc",
-      },
-    });
+    try {
+      const products = await prismaClient.product.findMany({
+        where: {
+          disabled: disabled === "true" ? true : false,
+        },
+        select: {
+          id: true,
+          name: true,
+          price: true,
+          description: true,
+          banner: true,
+          disabled: true,
+          category: {
+            select: {
+              id: true,
+              name: true,
+            },
+          },
+        },
+        orderBy: {
+          name: "desc",
+        },
+      });
 
-    return products;
+      return products;
+    } catch (error) {
+      console.log(error);
+      throw new Error("Erro ao listar produtos");
+    }
   }
 }
 

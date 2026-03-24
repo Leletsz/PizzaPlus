@@ -3,13 +3,11 @@ import { ListProductService } from "../../services/product/ListProductService";
 
 class ListProductController {
   async handle(req: Request, res: Response) {
-    const disabledParam = req.query.disabled;
+    const disabled = req.query.disabled as string | undefined;
 
-    // Converte string "true"/"false" para boolean — padrão: false
-    const disabled = disabledParam === "true";
+    const listProduct = new ListProductService();
 
-    const listProducts = new ListProductService();
-    const products = await listProducts.execute({ disabled });
+    const products = await listProduct.execute({ ...(disabled !== undefined && { disabled }) });
 
     return res.json(products);
   }

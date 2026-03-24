@@ -13,6 +13,7 @@ import { createCategorySchema } from "./schemas/categorySchema";
 import { CreateProductController } from "./controllers/product/CreateProductController";
 import { ListProductController } from "./controllers/product/ListProductController";
 import { createProductSchema, listProductSchema } from "./schemas/productSchema";
+import { DeleteProductController } from "./controllers/product/DeleteProductController";
 import uploadConfig from "./config/multer";
 
 const router = Router();
@@ -44,5 +45,7 @@ router.get("/category", isAuthenticated, new ListCategoryController().handle)
 router.post("/product", isAuthenticated, isAdmin, upload.single("file"), validateSchema(createProductSchema), new CreateProductController().handle)
 
 router.get("/products", isAuthenticated, validateSchema(listProductSchema), new ListProductController().handle)
+
+router.delete("/product", isAuthenticated, isAdmin, new DeleteProductController().handle)
 
 export { router };
