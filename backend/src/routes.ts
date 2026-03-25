@@ -15,6 +15,11 @@ import { ListProductController } from "./controllers/product/ListProductControll
 import { ListProductByCategoryController } from "./controllers/product/ListProductByCategoryController";
 import { createProductSchema, listProductSchema, listProductByCategorySchema } from "./schemas/productSchema";
 import { DeleteProductController } from "./controllers/product/DeleteProductController";
+import { CreateOrderController } from "./controllers/order/CreateOrderController";
+import { createOrderSchema, addItemSchema, removeItemSchema } from "./schemas/orderSchema";
+import { ListOrdersController } from "./controllers/order/ListOrdersController";
+import { AddItemController } from "./controllers/order/AddItemController";
+import { RemoveItemController } from "./controllers/order/RemoveItemController";
 import uploadConfig from "./config/multer";
 
 const router = Router();
@@ -50,5 +55,16 @@ router.get("/products", isAuthenticated, validateSchema(listProductSchema), new 
 router.delete("/product", isAuthenticated, isAdmin, new DeleteProductController().handle)
 
 router.get("/category/product", isAuthenticated, validateSchema(listProductByCategorySchema), new ListProductByCategoryController().handle)
+
+//  Rotas Orders
+router.post("/order", isAuthenticated, validateSchema(createOrderSchema), new CreateOrderController().handle)
+
+router.get("/orders", isAuthenticated, new ListOrdersController().handle)
+
+// Adicionar item a order
+router.post("/order/add", isAuthenticated, validateSchema(addItemSchema), new AddItemController().handle)
+
+// Remover item da order
+router.delete("/order/remove", isAuthenticated, validateSchema(removeItemSchema), new RemoveItemController().handle)
 
 export { router };
