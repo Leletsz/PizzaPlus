@@ -24,4 +24,16 @@ const removeItemSchema = z.object({
   }),
 });
 
-export { createOrderSchema, addItemSchema, removeItemSchema };
+const detailOrderSchema = z.object({
+  query: z.object({
+    order_id: z.string("O pedido é obrigatório").min(1, "O pedido é obrigatório"),
+  }),
+});
+
+const sendOrderSchema = z.object({
+  body: z.object({
+    order_id: z.string("O id do pedido precisa ser uma string"),
+    name: z.string("O nome precisa ser um texto")
+  })
+})
+export { createOrderSchema, addItemSchema, removeItemSchema, detailOrderSchema, sendOrderSchema };
