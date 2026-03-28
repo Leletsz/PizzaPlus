@@ -36,4 +36,17 @@ const sendOrderSchema = z.object({
     name: z.string("O nome precisa ser um texto")
   })
 })
-export { createOrderSchema, addItemSchema, removeItemSchema, detailOrderSchema, sendOrderSchema };
+
+const finishOrderSchema = z.object({
+  body: z.object({
+    order_id: z.string("O id do pedido precisa ser uma string")
+  })
+})
+
+const deleteOrderSchema = z.object({
+  query: z.object({
+    order_id: z.string("O id do pedido precisa ser uma string")
+  })
+})
+
+export { createOrderSchema, addItemSchema, removeItemSchema, detailOrderSchema, sendOrderSchema, finishOrderSchema, deleteOrderSchema };

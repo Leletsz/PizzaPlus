@@ -22,7 +22,6 @@ class CreateOrderService {
           CreatedAt: true,
         },
       });
-
       return order;
     } catch (err) {
       throw new Error("Erro ao criar pedido");
