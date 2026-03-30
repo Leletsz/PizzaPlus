@@ -80,4 +80,5 @@ router.put("/order/finish", isAuthenticated, validateSchema(finishOrderSchema), 
 
 //remover uma Order
 router.delete("/order", isAuthenticated, validateSchema(deleteOrderSchema), new DeleteOrderController().handle)
+
 export { router };
