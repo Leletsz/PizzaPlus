@@ -5,7 +5,8 @@
   "scripts": {
     "dev": "next dev",
     "build": "next build",
-    "start": "next start"
+    "start": "next start",
+    "format": "prettier --write ."
   },
   "dependencies": {
     "class-variance-authority": "^0.7.1",
@@ -27,6 +28,8 @@
     "autoprefixer": "^10.4.27",
     "babel-plugin-react-compiler": "1.0.0",
     "postcss": "^8.5.8",
+    "prettier": "3.8.1",
+    "prettier-plugin-tailwindcss": "^0.6.11",
     "tailwindcss": "^4.2.2",
     "typescript": "^5"
   }

@@ -1,11 +1,26 @@
 "use server"
 
-export async function registerAction(prevState:{sucess: boolean; error?: string} | null,
+import { apiClient } from "@/lib/api";
+
+export async function registerAction(prevState:{sucess: boolean; error?: string; redirectTo: string} | null,
     formData: FormData
 ) {
-    const name = formData.get("name") as string
-    const email = formData.get("email") as string
-    const password = formData.get("password") as string
+    try {
+        const name = formData.get("name") as string
+        const email = formData.get("email") as string
+        const password = formData.get("password") as string
 
-    return{ sucess: true}
+    const data = {
+        name: name,
+        email: email,
+        password: password,
+    }
+        await apiClient("/users", {
+            method: "POST",
+           body: JSON.stringify(data),
+        })
+        return{sucess: true, error:"", redirectTo:"/login"}
+    } catch (error) {
+        return { sucess: false, error: error instanceof Error ? error.message : "Erro ao cadastrar usuário", redirectTo: "" }
+    }
 }

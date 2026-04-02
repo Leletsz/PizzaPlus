@@ -1,6 +1,6 @@
 "use client";
 
-import { useActionState } from "react";
+import { useActionState, useEffect } from "react";
 import Link from "next/link";
 import { Button } from "../ui/button";
 import {
@@ -14,9 +14,17 @@ import {
 import { Input } from "../ui/input";
 import { Label } from "../ui/label";
 import { registerAction } from "@/actions/auth";
+import { useRouter } from "next/navigation";
 
 export function RegisterForm() {
   const [state, formAction, isPending] = useActionState(registerAction, null);
+  const router = useRouter();
+
+  useEffect(() => {
+    if (state?.sucess && state?.redirectTo) {
+      router.replace(state.redirectTo);
+    }
+  }, [state, router]);
 
   return (
     <Card className="bg-app-card border border-app-border w-full max-w-md mx-auto">
@@ -40,7 +48,6 @@ export function RegisterForm() {
               required
               minLength={3}
               className="text-white bg-app-card border border-app-border"
-              onChange={(ev) => ev.target.value}
             ></Input>
           </div>
           <div className="space-y-2">
