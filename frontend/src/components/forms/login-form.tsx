@@ -3,21 +3,14 @@
 import { useActionState, useEffect } from "react";
 import Link from "next/link";
 import { Button } from "../ui/button";
-import {
-  Card,
-  CardHeader,
-  CardTitle,
-  CardDescription,
-  CardContent,
-  CardFooter,
-} from "../ui/card";
+import { Card, CardHeader, CardTitle, CardContent } from "../ui/card";
 import { Input } from "../ui/input";
 import { Label } from "../ui/label";
-import { registerAction } from "@/actions/auth";
+import { LoginAction } from "@/actions/auth";
 import { useRouter } from "next/navigation";
 
-export function RegisterForm() {
-  const [state, formAction, isPending] = useActionState(registerAction, null);
+export function LoginForm() {
+  const [state, formAction, isPending] = useActionState(LoginAction, null);
   const router = useRouter();
 
   useEffect(() => {
@@ -36,20 +29,6 @@ export function RegisterForm() {
       </CardHeader>
       <CardContent>
         <form className="space-y-4" action={formAction}>
-          <div className="space-y-2">
-            <Label htmlFor="name" className="text-white">
-              Nome
-            </Label>
-            <Input
-              type="text"
-              id="name"
-              name="name"
-              placeholder="Digite seu nome"
-              required
-              minLength={3}
-              className="text-white bg-app-card border border-app-border"
-            ></Input>
-          </div>
           <div className="space-y-2">
             <Label htmlFor="email" className="text-white">
               Email
@@ -80,12 +59,21 @@ export function RegisterForm() {
             type="submit"
             className="w-full bg-brand-primary cursor-pointer"
           >
-            {isPending ? "Criando conta..." : "Criar Conta"}
+            {isPending ? "Acessando conta..." : "Acessar Conta"}
           </Button>
+          {state?.error && (
+            <div className="text-sm text-red-500 bg-red-50 rounded-md p-3">
+              Email ou senha inválido
+            </div>
+          )}
+
           <p className="text-center text-sm text-gray-100">
-            Já possui uma conta?{" "}
-            <Link className="text-brand-primary font-semibold" href={"/login"}>
-              Faça o login{" "}
+            Ainda não possui uma conta?{" "}
+            <Link
+              className="text-brand-primary font-semibold"
+              href={"/register"}
+            >
+              Cadastre-se{" "}
             </Link>
           </p>
         </form>

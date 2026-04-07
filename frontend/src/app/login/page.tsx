@@ -1,7 +1,18 @@
-export default function Login(){
-    return(
-        <div>
-            <h1>Login</h1>
-        </div>
-    )
+import { LoginForm } from "@/components/forms/login-form";
+import { getUser } from "@/lib/auth";
+import { redirect } from "next/navigation";
+
+export default async function Login() {
+  //Se tiver usuario logado ele redireciona para o dashboard
+  const user = await getUser();
+  if (user) {
+    redirect("/dashboard");
+  }
+  return (
+    <div className="bg-app-background min-h-screen flex items-center justify-center px-4 py-8">
+      <div className="w-full">
+        <LoginForm />
+      </div>
+    </div>
+  );
 }
