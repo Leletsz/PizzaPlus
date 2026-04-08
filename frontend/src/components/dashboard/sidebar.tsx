@@ -1,8 +1,10 @@
 "use client";
 import { cn } from "@/lib/utils";
-import { Package, ShoppingCart, Tags } from "lucide-react";
+import { LogOutIcon, Package, ShoppingCart, Tags } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { Button } from "../ui/button";
+import { logoutAction } from "@/actions/auth";
 
 interface SidebarProps {
   userName: string;
@@ -25,7 +27,7 @@ const menuItems = [
     icon: Tags,
   },
 ];
-export default async function Sidebar({ userName }: SidebarProps) {
+export default function Sidebar({ userName }: SidebarProps) {
   const pathname = usePathname();
   return (
     <aside className="hidden lg:flex flex-col h-screen w-64 border-r border-app-border bg-app-sidebar">
@@ -56,6 +58,18 @@ export default async function Sidebar({ userName }: SidebarProps) {
           );
         })}
       </nav>
+      <div className="border-t p-4 border-app-border">
+        <form action={logoutAction}>
+          <Button
+            type="submit"
+            variant={"ghost"}
+            className="w-full justify-start gap-3 text-white hover:text-white hover:bg-transparent cursor-pointer"
+          >
+            <LogOutIcon className="w-5 h-5" />
+            Sair
+          </Button>
+        </form>
+      </div>
     </aside>
   );
 }

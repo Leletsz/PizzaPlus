@@ -1,8 +1,9 @@
 "use server"
 
 import { apiClient } from "@/lib/api";
-import { setToken } from "@/lib/auth";
+import { removeToken, setToken } from "@/lib/auth";
 import { AuthResponse, User } from "@/lib/types";
+import { redirect } from "next/navigation";
 
 export async function registerAction(prevState:{success: boolean; error?: string; redirectTo: string} | null, formData: FormData) {
     try {
@@ -45,4 +46,9 @@ export async function LoginAction(prevState:{success: boolean; error?: string; r
     }catch(error){
         return{ success: false, error: error instanceof Error ? error.message : "Erro ao fazer o login", redirectTo: ""}
     }
+}
+
+export async function logoutAction() {
+    await removeToken();
+    redirect("login")
 }
