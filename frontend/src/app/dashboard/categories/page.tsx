@@ -1,3 +1,4 @@
+import { CategoryForm } from "@/components/dashboard/category-form";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { apiClient } from "@/lib/api";
 import { getToken } from "@/lib/auth";
@@ -17,7 +18,7 @@ export default async function Categories() {
             Categorias
           </h1>
         </div>
-        <button>Criar Categoria</button>
+        <CategoryForm></CategoryForm>
       </div>
       {categories.length !== 0 && (
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
