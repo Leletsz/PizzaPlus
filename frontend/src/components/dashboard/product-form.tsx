@@ -10,7 +10,7 @@ import {
   DialogTrigger,
 } from "../ui/dialog";
 import { Button } from "../ui/button";
-import { Plus } from "lucide-react";
+import { Plus, Upload } from "lucide-react";
 import { Label } from "../ui/label";
 import { Input } from "../ui/input";
 import { Textarea } from "../ui/textarea";
@@ -24,6 +24,7 @@ import {
 import { createProductAction } from "@/actions/products";
 import { Category } from "@/lib/types";
 import { useRouter } from "next/navigation";
+import Image from "next/image";
 
 interface ProductFormProps {
   categories: Category[];
@@ -34,6 +35,9 @@ export function ProductForm({ categories }: ProductFormProps) {
   const [categoryId, setCategoryId] = useState("");
   const [error, setError] = useState("");
   const router = useRouter();
+  const [priceValue, setPriceValue] = useState("");
+  const [imagePreview, setImagePreview] = useState<string | null>(null);
+  const [imageFile, setImageFile] = useState<File | null>();
 
   async function handleCreateProduct(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
@@ -56,6 +60,41 @@ export function ProductForm({ categories }: ProductFormProps) {
     }
 
     setError(result.error);
+  }
+
+  function formatToBrl(value: string) {
+    const numbers = value.replace(/\D/g, "");
+    if (!numbers) return "";
+
+    const amount = parseInt(numbers) / 100;
+    return amount.toLocaleString("pt-BR", {
+      style: "currency",
+      currency: "BRL",
+    });
+  }
+
+  function handlePriceChange(e: React.ChangeEvent<HTMLInputElement>) {
+    const formatted = formatToBrl(e.target.value);
+    setPriceValue(formatted);
+  }
+
+  function handleImageChange(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    if (file) {
+      if (file.size > 5 * 1024 * 1024) {
+        return;
+      }
+      setImageFile(file);
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setImagePreview(reader.result as string);
+      };
+      reader.readAsDataURL(file);
+    }
+  }
+  function clearImage() {
+    setImageFile(null);
+    setImagePreview(null);
   }
 
   return (
@@ -87,11 +126,11 @@ export function ProductForm({ categories }: ProductFormProps) {
         <form className="space-y-4" onSubmit={handleCreateProduct}>
           {/* Nome */}
           <div>
-            <Label htmlFor="product-name" className="mb-2">
+            <Label htmlFor="name" className="mb-2">
               Nome do produto
             </Label>
             <Input
-              id="product-name"
+              id="name"
               name="name"
               required
               placeholder="Ex: Pizza Margherita"
@@ -101,15 +140,16 @@ export function ProductForm({ categories }: ProductFormProps) {
 
           {/* Preço */}
           <div>
-            <Label htmlFor="product-price" className="mb-2">
-              Preço (em centavos)
+            <Label htmlFor="price" className="mb-2">
+              Preço
             </Label>
             <Input
-              id="product-price"
+              id="price"
               name="price"
               required
-              type="number"
               min="1"
+              value={priceValue}
+              onChange={handlePriceChange}
               placeholder="Ex: 3590 → R$ 35,90"
               className="border-app-border bg-app-background text-white"
             />
@@ -117,11 +157,11 @@ export function ProductForm({ categories }: ProductFormProps) {
 
           {/* Descrição */}
           <div>
-            <Label htmlFor="product-description" className="mb-2">
+            <Label htmlFor="description" className="mb-2">
               Descrição
             </Label>
             <Textarea
-              id="product-description"
+              id="description"
               name="description"
               required
               placeholder="Descreva o produto..."
@@ -132,16 +172,12 @@ export function ProductForm({ categories }: ProductFormProps) {
 
           {/* Categoria */}
           <div>
-            <Label htmlFor="product-category" className="mb-2">
+            <Label htmlFor="category" className="mb-2">
               Categoria
             </Label>
-            <Select
-              value={categoryId}
-              onValueChange={setCategoryId}
-              required
-            >
+            <Select value={categoryId} onValueChange={setCategoryId} required>
               <SelectTrigger
-                id="product-category"
+                id="category"
                 className="border-app-border bg-app-background text-white"
               >
                 <SelectValue placeholder="Selecione uma categoria" />
@@ -157,24 +193,46 @@ export function ProductForm({ categories }: ProductFormProps) {
           </div>
 
           {/* Imagem */}
-          <div>
-            <Label htmlFor="product-file" className="mb-2">
+          <div className="space-y-2">
+            <Label htmlFor="file" className="mb-2">
               Imagem do produto
             </Label>
-            <Input
-              id="product-file"
-              name="file"
-              type="file"
-              required
-              accept="image/*"
-              className="border-app-border bg-app-background text-white file:text-white file:bg-transparent"
-            />
+            {imagePreview ? (
+              <div className="relative w-full h-48 border rounded-lg overflow-hidden">
+                <Image
+                  src={imagePreview}
+                  alt="preview da imagem"
+                  fill
+                  className="object-cover"
+                />
+                <Button
+                  type="button"
+                  variant="destructive"
+                  onClick={clearImage}
+                  className="absolute top-2 right-2 z-20 text-white bg-brand-primary"
+                >
+                  Excluir
+                </Button>
+              </div>
+            ) : (
+              <div className="border-2 border-dashed rounded-md p-8 flex flex-col items-center justify-center">
+                <Upload className="h-8 w-8 mx-auto text-gray-400 mb-2" />
+                <Label htmlFor="file">Clique para selecionar uma imagem</Label>
+                <Input
+                  id="file"
+                  name="file"
+                  type="file"
+                  accept="image/jpeg,image/jpg,image/png"
+                  onChange={handleImageChange}
+                  required
+                  className="hidden"
+                />
+              </div>
+            )}
           </div>
 
           {/* Erro */}
-          {error && (
-            <p className="text-red-400 text-sm">{error}</p>
-          )}
+          {error && <p className="text-red-400 text-sm">{error}</p>}
 
           <Button
             type="submit"
