@@ -36,25 +36,53 @@ export function ProductForm({ categories }: ProductFormProps) {
   const [error, setError] = useState("");
   const router = useRouter();
   const [priceValue, setPriceValue] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
   const [imageFile, setImageFile] = useState<File | null>();
 
+  function convertBRLToCents(value: string): number {
+    const cleanValue = value
+      .replace(/[R$\s]/g, "")
+      .replace(/\./g, "")
+      .replace(",", ".");
+
+    const reais = parseFloat(cleanValue) || 0;
+    return Math.round(reais * 100);
+  }
+
   async function handleCreateProduct(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
-    setError("");
+    setIsLoading(true);
 
-    const formData = new FormData(e.currentTarget);
-
-    // Garante que category_id do select controlado está no FormData
-    if (categoryId) {
-      formData.set("category_id", categoryId);
+    if (!imageFile) {
+      setIsLoading(false);
+      return;
     }
 
+    const formElement = e.currentTarget;
+
+    const name = (formElement.elements.namedItem("name") as HTMLInputElement)
+      ?.value;
+    const description = (
+      formElement.elements.namedItem("description") as HTMLInputElement
+    )?.value;
+    const priceInCents = convertBRLToCents(priceValue);
+
+    const formData = new FormData();
+    formData.append("name", name);
+    formData.append("description", description);
+    formData.append("price", priceInCents.toString());
+    formData.append("category_id", categoryId);
+    formData.append("file", imageFile);
+
     const result = await createProductAction(formData);
+
+    setIsLoading(false);
 
     if (result.success) {
       setOpen(false);
       setCategoryId("");
+      clearImage();
       router.refresh();
       return;
     }
@@ -150,7 +178,7 @@ export function ProductForm({ categories }: ProductFormProps) {
               min="1"
               value={priceValue}
               onChange={handlePriceChange}
-              placeholder="Ex: 3590 → R$ 35,90"
+              placeholder="EX: R$ 35,90"
               className="border-app-border bg-app-background text-white"
             />
           </div>

@@ -1,4 +1,6 @@
+import { DeleteButtonProduct } from "@/components/dashboard/delete-button";
 import { ProductForm } from "@/components/dashboard/product-form";
+import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { apiClient } from "@/lib/api";
 import { getToken } from "@/lib/auth";
@@ -38,7 +40,7 @@ export default async function Products() {
           {products.map((product) => (
             <Card
               key={product.id}
-              className="bg-app-border transition-shadow hover:shadow-md text-white overflow-hidden"
+              className="bg-app-card transition-shadow hover:shadow-md text-white overflow-hidden"
             >
               {product.banner && (
                 <div className="relative w-full h-48">
@@ -51,18 +53,26 @@ export default async function Products() {
                 </div>
               )}
               <CardHeader>
-                <CardTitle className="gap-2 flex items-center text-base md:text-lg">
-                  <Package className="w-5 h-5 shrink-0" />
-                  <span className="truncate">{product.name}</span>
+                <CardTitle className="gap-2 flex items-center justify-between text-base md:text-lg">
+                  <div className="flex flex-row gap-2 items-center">
+                    <Package className="w-5 h-5 shrink-0" />
+                    <span className="truncate">{product.name}</span>
+                  </div>
+                  <DeleteButtonProduct productId={product.id} />
                 </CardTitle>
               </CardHeader>
-              <CardContent className="space-y-2">
-                <p className="text-brand-primary font-semibold">
-                  {formatPrice(product.price)}
-                </p>
+              <CardContent className="space-y-2 ">
                 <p className="text-gray-300 text-sm line-clamp-2">
                   {product.description}
                 </p>
+                <div className="flex justify-between pt-2 border-t border-app-border">
+                  <p className="text-brand-primary  font-semibold">
+                    {formatPrice(product.price)}
+                  </p>
+                  <p className="bg-app-sidebar rounded-md px-1.5 py-0.5">
+                    {product.category?.name}
+                  </p>
+                </div>
               </CardContent>
             </Card>
           ))}
