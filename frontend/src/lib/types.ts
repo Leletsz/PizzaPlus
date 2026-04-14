@@ -35,3 +35,24 @@ export interface Product{
         name: string;
     }
 }
+
+export interface Order{
+    id: string;
+    table: number;
+    name?: string;
+    draft: Boolean;
+    status: Boolean;
+    createdAt: string;
+    items?: Items[]
+}
+export interface Items{
+        id: string;
+        amount: number;
+        product: {
+            id:string;
+            name: string;
+            price: number;
+            description: string;
+            banner:string;
+        }
+}

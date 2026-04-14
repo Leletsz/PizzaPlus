@@ -1,7 +1,9 @@
-import { requiredAdmin } from "@/lib/auth";
+import { Orders } from "@/components/dashboard/orders";
+import { getToken, requiredAdmin } from "@/lib/auth";
 
 export default async function Dashboard() {
-  const user = await requiredAdmin();
-  console.log(user);
-  return <div>Dashboard</div>;
+  await requiredAdmin();
+  const token = await getToken();
+
+  return <Orders token={token!} />;
 }
