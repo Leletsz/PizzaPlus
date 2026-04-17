@@ -2,10 +2,12 @@
 import { Button } from "@/components/ui/button";
 import { apiClient } from "@/lib/api";
 import { Order } from "@/lib/types";
-import { RefreshCcw } from "lucide-react";
+import { Eye, RefreshCcw } from "lucide-react";
 import { useEffect, useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "../ui/card";
 import { Badge } from "../ui/badge";
+import { formatPrice } from "@/lib/format";
+import { OrderModal } from "./order-modal";
 
 interface OrdersProps {
   token: string;
@@ -14,6 +16,7 @@ interface OrdersProps {
 export function Orders({ token }: OrdersProps) {
   const [loading, setLoading] = useState(true);
   const [orders, setOrders] = useState<Order[]>([]);
+  const [selectedOrder, setSelectedOrder] = useState<null | string>(null);
 
   const fetchOrders = async () => {
     try {
@@ -22,7 +25,10 @@ export function Orders({ token }: OrdersProps) {
         cache: "no-store",
         token: token,
       });
-      setOrders(response);
+
+      const pendingOrders = response.filter((order) => !order.status);
+
+      setOrders(pendingOrders);
       setLoading(false);
     } catch (error) {
       setLoading(false);
@@ -36,6 +42,13 @@ export function Orders({ token }: OrdersProps) {
     loadOrders();
   }, []);
 
+  const calculateOrderTotal = (order: Order) => {
+    if (!order.items) return 0;
+    return order.items.reduce((total, item) => {
+      return total + item.product.price * item.amount;
+    }, 0);
+  };
+
   return (
     <div className="space-y-4 sm:space-y-6">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
@@ -44,7 +57,7 @@ export function Orders({ token }: OrdersProps) {
             Pedidos
           </h1>
         </div>
-        <Button className="bg-brand-primary">
+        <Button className="bg-brand-primary" onClick={fetchOrders}>
           <RefreshCcw className="w-5 h-5" />
         </Button>
       </div>
@@ -88,11 +101,33 @@ export function Orders({ token }: OrdersProps) {
                     </div>
                   )}
                 </div>
+                <div className="flex flex-col md:flex-row items-center justify-between pt-4 border-t border-app-border gap-3">
+                  <div className="self-start">
+                    <p className="text-sm md:text-base text-gray-400">Total</p>
+                    <p className="text-base font-bold text-brand-primary">
+                      {formatPrice(calculateOrderTotal(order))}
+                    </p>
+                  </div>
+                  <Button
+                    size={"sm"}
+                    className="bg-brand-primary w-full md:w-auto"
+                    onClick={() => setSelectedOrder(order.id)}
+                  >
+                    <Eye></Eye>Detalhes
+                  </Button>
+                </div>
               </CardContent>
             </Card>
           ))}
         </div>
       )}
+      <OrderModal
+        orderId={selectedOrder}
+        onClose={async () => {
+          (setSelectedOrder(null), await fetchOrders());
+        }}
+        token={token!}
+      />
     </div>
   );
 }
