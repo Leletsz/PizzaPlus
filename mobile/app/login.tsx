@@ -1,6 +1,8 @@
 import Button from "@/components/button";
 import Input from "@/components/Input";
 import { colors, fontSize, spacing } from "@/constants/theme";
+import { useAuth } from "@/contexts/AuthContext";
+import { useRouter } from "expo-router";
 import { useState } from "react";
 import {
   View,
@@ -9,15 +11,29 @@ import {
   StyleSheet,
   ScrollView,
   Platform,
+  Alert,
 } from "react-native";
 
 export default function Login() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(true);
-
-  function handleLogin() {
-    alert(email + password);
+  const { signIn } = useAuth();
+  const router = useRouter();
+  async function handleLogin() {
+    if (!email.trim() || !password.trim()) {
+      Alert.alert("Atenção", "Preencha todos os campos");
+      return;
+    }
+    try {
+      setLoading(true);
+      await signIn(email, password);
+      router.replace("/(authenticated)/dashboard");
+    } catch (err) {
+      Alert.alert("Erro", "Erro ao fazer o login");
+    } finally {
+      setLoading(false);
+    }
   }
 
   return (
