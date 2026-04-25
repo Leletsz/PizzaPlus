@@ -1,6 +1,6 @@
 import api from "@/services/api";
 import { LoginResponse, User } from "@/types";
-import { createContext, useContext, useState } from "react";
+import { createContext, useContext, useEffect, useState } from "react";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 
 interface AuthProviderProps {
@@ -12,15 +12,37 @@ interface AuthContextData {
   signed: boolean;
   loading: boolean;
   signIn: (email: string, password: string) => Promise<void>;
+  signOut: () => Promise<void>;
 }
 
 const AuthContext = createContext({} as AuthContextData);
 
 export function AuthProvider({ children }: AuthProviderProps) {
   const [signed, setSigned] = useState(false);
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(true);
   const [user, setUser] = useState<User | null>(null);
+  useEffect(() => {
+    async function loadData() {
+      await loadStorageData();
+    }
+    loadData();
+  }, []);
 
+  async function loadStorageData() {
+    try {
+      setLoading(true);
+      const storedToken = await AsyncStorage.getItem("@token:pizzaria");
+      const storedUserData = await AsyncStorage.getItem("@user:pizzaria");
+
+      if (storedToken && storedUserData) {
+        setUser(JSON.parse(storedUserData));
+      }
+    } catch (error) {
+      console.log(error);
+    } finally {
+      setLoading(false);
+    }
+  }
   async function signIn(email: string, password: string) {
     try {
       const response = await api.post<LoginResponse>("/session", {
@@ -40,8 +62,14 @@ export function AuthProvider({ children }: AuthProviderProps) {
     }
   }
 
+  async function signOut() {
+    await AsyncStorage.removeItem("@token:pizzaria");
+    await AsyncStorage.removeItem("@user:pizzaria");
+    setUser(null);
+  }
+
   return (
-    <AuthContext value={{ signed, loading, signIn, user }}>
+    <AuthContext value={{ signed: !!user, loading, signIn, signOut, user }}>
       {children}
     </AuthContext>
   );
