@@ -1,12 +1,152 @@
+import Input from "@/components/Input";
+import Button from "@/components/button";
+import { borderRadius, colors, fontSize, spacing } from "@/constants/theme";
 import { useAuth } from "@/contexts/AuthContext";
-import { View, Text, Button } from "react-native";
+import api from "@/services/api";
+import { Order } from "@/types";
+import { useRouter } from "expo-router";
+import { StatusBar } from "expo-status-bar";
+import { useState } from "react";
+import {
+  View,
+  Text,
+  StyleSheet,
+  KeyboardAvoidingView,
+  Platform,
+  ScrollView,
+  Touchable,
+  TouchableOpacity,
+  Alert,
+} from "react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 export default function Dashboard() {
   const { signOut } = useAuth();
+  const insets = useSafeAreaInsets();
+  const router = useRouter();
+
+  const [tableNumber, setTableNumber] = useState("");
+  const [loading, setLoading] = useState(false);
+
+  async function handleOpenTable() {
+    if (!tableNumber) {
+      Alert.alert("Atenção", "digite um numero válido");
+      return;
+    }
+    const table = parseInt(tableNumber);
+    if (isNaN(table) || table <= 0) {
+      Alert.alert("Atenção", "digite um numero válido");
+      return;
+    }
+
+    try {
+      setLoading(true);
+      const response = await api.post<Order>("/order", {
+        table: table,
+      });
+      router.push({
+        pathname: "/(authenticated)/order",
+        params: { table: response.data.table, order_id: response.data.id },
+      });
+    } catch (error) {
+      Alert.alert("Erro", "Falha ao abrir mesa, tente mais tarde." + error);
+    } finally {
+      setLoading(false);
+    }
+  }
+
   return (
-    <View>
-      <Text>Pagina Dashboard</Text>
-      <Button title="Sair" onPress={signOut} />
+    <View style={styles.container}>
+      <StatusBar style="light" backgroundColor={colors.background} />
+      <KeyboardAvoidingView
+        style={styles.keyboardContainer}
+        behavior={Platform.OS === "ios" ? "padding" : "height"}
+      >
+        <ScrollView
+          contentContainerStyle={styles.scrollContent}
+          keyboardShouldPersistTaps="handled"
+        >
+          <View style={[styles.header, { paddingTop: insets.top + 24 }]}>
+            <TouchableOpacity style={styles.signoutButton} onPress={signOut}>
+              <Text style={styles.signoutText}>Sair</Text>
+            </TouchableOpacity>
+          </View>
+          <View style={styles.content}>
+            <View style={styles.logoContainer}>
+              <Text style={styles.logoText}>
+                Pizza<Text style={styles.logoBrand}>Plus</Text>
+              </Text>
+            </View>
+            <Text style={styles.title}>Novo pedido</Text>
+            <Input
+              style={styles.input}
+              placeholder="Numero da mesa"
+              placeholderTextColor={colors.gray}
+              value={tableNumber}
+              onChangeText={setTableNumber}
+              keyboardType="numeric"
+            />
+            <Button title="Abrir Mesa" onPress={handleOpenTable}></Button>
+          </View>
+        </ScrollView>
+      </KeyboardAvoidingView>
     </View>
   );
 }
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: colors.background,
+  },
+  keyboardContainer: {
+    flex: 1,
+  },
+  scrollContent: {
+    flexGrow: 1,
+  },
+  header: {
+    flexDirection: "row",
+    justifyContent: "flex-end",
+    paddingHorizontal: spacing.lg,
+    paddingBottom: spacing.sm,
+    position: "absolute",
+    right: 0,
+  },
+  signoutButton: {
+    backgroundColor: colors.red,
+    paddingVertical: spacing.sm,
+    paddingHorizontal: spacing.md,
+    borderRadius: borderRadius.md,
+  },
+  signoutText: {
+    color: colors.primary,
+    fontSize: fontSize.md,
+  },
+  content: {
+    flex: 1,
+    justifyContent: "center",
+    paddingHorizontal: spacing.xl,
+  },
+  logoContainer: {
+    alignItems: "center",
+    marginBottom: spacing.md,
+  },
+  logoText: {
+    fontSize: 45,
+    fontWeight: "900",
+    color: colors.primary,
+  },
+  logoBrand: {
+    color: colors.brand,
+  },
+  title: {
+    fontSize: fontSize.xl,
+    color: colors.primary,
+    textAlign: "center",
+    marginBottom: spacing.sm,
+  },
+  input: {
+    marginBottom: spacing.sm,
+  },
+});

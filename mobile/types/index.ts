@@ -53,3 +53,13 @@ export interface AddItemRequest{
 export interface SendOrderRequest{
     order_id: string;
 }
+
+export interface Order{
+    id: string;
+    name?: string | null;
+    status: boolean;
+    table: number;
+    draft: boolean;
+    createdAt: string;
+    items?: Item[];
+}

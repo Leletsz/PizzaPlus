@@ -22,6 +22,6 @@ app.use((error: Error, _: Request, res: Response, next: NextFunction) => {
 
 const PORT = process.env["PORT"]!;
 
-app.listen(PORT, () => {
+app.listen(Number(PORT), "0.0.0.0", () => {
   console.log("servidor rodando na porta:" + PORT);
 });
