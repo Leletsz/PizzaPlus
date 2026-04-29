@@ -46,8 +46,12 @@ export default function Dashboard() {
       });
       router.push({
         pathname: "/(authenticated)/order",
-        params: { table: response.data.table, order_id: response.data.id },
+        params: {
+          table: response.data.table.toString(),
+          order_id: response.data.id,
+        },
       });
+      setTableNumber("");
     } catch (error) {
       Alert.alert("Erro", "Falha ao abrir mesa, tente mais tarde." + error);
     } finally {
