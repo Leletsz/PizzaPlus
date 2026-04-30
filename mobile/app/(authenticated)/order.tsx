@@ -66,7 +66,7 @@ export default function Order() {
           </Pressable>
         </View>
       </View>
-      <ScrollView>
+      <ScrollView style={styles.contentSelect}>
         <Select
           label="Categorias"
           placeholder="Selecione a categoria"
@@ -114,5 +114,8 @@ const styles = StyleSheet.create({
     backgroundColor: colors.red,
     padding: spacing.sm,
     borderRadius: 8,
+  },
+  contentSelect: {
+    flex: 1,
   },
 });
