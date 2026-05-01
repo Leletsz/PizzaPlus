@@ -9,12 +9,14 @@ import {
 } from "react-native";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import React, { useEffect, useState } from "react";
-import { Category } from "@/types";
+import { Category, Product } from "@/types";
 import api from "@/services/api";
 import { colors, fontSize, spacing } from "@/constants/theme";
 import { Ionicons } from "@expo/vector-icons";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Select } from "@/components/Select";
+import { QuantityControl } from "@/components/QuatityControl";
+import Button from "@/components/button";
 
 export default function Order() {
   const router = useRouter();
@@ -25,8 +27,15 @@ export default function Order() {
   }>();
 
   const [categories, setCategories] = useState<Category[]>([]);
-  const [loadingCategories, setLoadingCategories] = useState(true);
   const [selectedCategory, setSelectedCategory] = useState("");
+
+  const [products, setProducts] = useState<Product[]>([]);
+  const [selectedproducts, setSelectedProducts] = useState("");
+
+  const [quantity, setQuantity] = useState(1);
+
+  const [loadingCategories, setLoadingCategories] = useState(true);
+  const [loadingProducts, setLoadingProducts] = useState(true);
 
   useEffect(() => {
     async function loadDataCategories() {
@@ -34,6 +43,15 @@ export default function Order() {
     }
     loadDataCategories();
   }, []);
+
+  useEffect(() => {
+    if (selectedCategory) {
+      loadProducts(selectedCategory);
+    } else {
+      setProducts([]);
+      setSelectedCategory("");
+    }
+  }, [selectedCategory]);
 
   async function loadCategories() {
     try {
@@ -46,6 +64,21 @@ export default function Order() {
       );
     } finally {
       setLoadingCategories(false);
+    }
+  }
+
+  async function loadProducts(categoryId: string) {
+    try {
+      setLoadingProducts(true);
+
+      const response = await api.get<Product[]>("/category/product", {
+        params: { category_id: categoryId },
+      });
+      setProducts(response.data);
+    } catch (error) {
+      console.log(error);
+    } finally {
+      setLoadingProducts(false);
     }
   }
 
@@ -66,7 +99,7 @@ export default function Order() {
           </Pressable>
         </View>
       </View>
-      <ScrollView style={styles.contentSelect}>
+      <ScrollView style={styles.scrollContent}>
         <Select
           label="Categorias"
           placeholder="Selecione a categoria"
@@ -77,6 +110,42 @@ export default function Order() {
           selectedValue={selectedCategory}
           onValueChange={setSelectedCategory}
         />
+
+        {loadingProducts ? (
+          <ActivityIndicator size={"small"} color={colors.brand} />
+        ) : (
+          selectedCategory && (
+            <Select
+              placeholder="Selecione um produto"
+              options={products.map((product) => ({
+                label: product.name,
+                value: product.id,
+              }))}
+              selectedValue={selectedproducts}
+              onValueChange={setSelectedProducts}
+            />
+          )
+        )}
+        {selectedproducts && (
+          <View style={styles.quantitySection}>
+            <Text style={styles.quantityLabel}>Quantidade</Text>
+            <QuantityControl
+              quantity={quantity}
+              onIncrement={() => setQuantity((quantity) => quantity + 1)}
+              onDecrement={() => {
+                if (quantity <= 1) {
+                  setQuantity(1);
+                  return;
+                }
+                setQuantity((quantity) => quantity - 1);
+              }}
+            />
+          </View>
+        )}
+
+        {selectedproducts && (
+          <Button title="Adicionar" onPress={() => {}} variant="secondary" />
+        )}
       </ScrollView>
     </View>
   );
@@ -115,7 +184,16 @@ const styles = StyleSheet.create({
     padding: spacing.sm,
     borderRadius: 8,
   },
-  contentSelect: {
-    flex: 1,
+  scrollContent: { padding: spacing.lg },
+  quantitySection: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    paddingVertical: spacing.md,
+  },
+  quantityLabel: {
+    color: colors.primary,
+    fontSize: fontSize.lg,
+    fontWeight: "600",
   },
 });
