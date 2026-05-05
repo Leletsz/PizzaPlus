@@ -34,7 +34,7 @@ export interface Product{
 
 export interface Item{
     id: string;
-    amount: string;
+    amount: number;
     order_id: string;
     product_id: string;
     createdAt: string;

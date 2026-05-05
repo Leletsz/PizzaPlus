@@ -31,6 +31,10 @@ export default function AuthenticatedLayout() {
     >
       <Stack.Screen name="dashboard" options={{ headerShown: false }} />
       <Stack.Screen name="order" options={{ headerShown: false }} />
+      <Stack.Screen
+        name="finish"
+        options={{ headerShown: true, headerTitle: "finalizar pedido" }}
+      />
     </Stack>
   );
 }

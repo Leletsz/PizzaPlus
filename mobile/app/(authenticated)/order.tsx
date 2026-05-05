@@ -9,7 +9,7 @@ import {
 } from "react-native";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import React, { useEffect, useState } from "react";
-import { Category, Product } from "@/types";
+import { Category, Item, Product } from "@/types";
 import api from "@/services/api";
 import { colors, fontSize, spacing } from "@/constants/theme";
 import { Ionicons } from "@expo/vector-icons";
@@ -17,6 +17,7 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Select } from "@/components/Select";
 import { QuantityControl } from "@/components/QuatityControl";
 import Button from "@/components/button";
+import OrderItem from "@/components/OrderItem";
 
 export default function Order() {
   const router = useRouter();
@@ -35,7 +36,10 @@ export default function Order() {
   const [quantity, setQuantity] = useState(1);
 
   const [loadingCategories, setLoadingCategories] = useState(true);
-  const [loadingProducts, setLoadingProducts] = useState(true);
+  const [loadingProducts, setLoadingProducts] = useState(false);
+  const [loadingAddItem, setloadingAddItem] = useState(false);
+
+  const [items, setItems] = useState<Item[]>([]);
 
   useEffect(() => {
     async function loadDataCategories() {
@@ -82,6 +86,50 @@ export default function Order() {
     }
   }
 
+  async function handleAddItem() {
+    try {
+      setloadingAddItem(true);
+
+      const response = await api.post<Item>("/order/add", {
+        order_id: order_id,
+        product_id: selectedproducts,
+        amount: quantity,
+      });
+      setItems([...items, response.data]);
+      setSelectedCategory("");
+      setSelectedProducts("");
+      setQuantity(1);
+    } catch (error) {
+      console.log(error);
+    } finally {
+      setloadingAddItem(false);
+    }
+  }
+
+  async function handleRemoveItem(item_id: string) {
+    try {
+      await api.delete<Item>("/order/remove", {
+        params: { item_id: item_id },
+      });
+
+      const updateditems = items.filter((item) => item.id != item_id);
+      setItems(updateditems);
+    } catch (error) {
+      console.log(error);
+    }
+  }
+
+  function handleAdvance() {
+    if (items.length === 0) {
+      return;
+    }
+
+    router.push({
+      pathname: "/(authenticated)/finish",
+      params: { order_id: order_id, table: table },
+    });
+  }
+
   if (loadingCategories) {
     return (
       <View style={styles.loadingContainer}>
@@ -99,7 +147,10 @@ export default function Order() {
           </Pressable>
         </View>
       </View>
-      <ScrollView style={styles.scrollContent}>
+      <ScrollView
+        style={styles.scrollContent}
+        contentContainerStyle={{ paddingBottom: insets.bottom + 40 }}
+      >
         <Select
           label="Categorias"
           placeholder="Selecione a categoria"
@@ -144,7 +195,28 @@ export default function Order() {
         )}
 
         {selectedproducts && (
-          <Button title="Adicionar" onPress={() => {}} variant="secondary" />
+          <Button
+            title="Adicionar"
+            onPress={handleAddItem}
+            variant="secondary"
+          />
+        )}
+        {items.length > 0 && (
+          <View style={styles.itemsSection}>
+            <Text style={styles.itemsTitle}>Itens adicionados</Text>
+            {items.map((item) => (
+              <OrderItem
+                item={item}
+                key={item.id}
+                onRemove={handleRemoveItem}
+              />
+            ))}
+          </View>
+        )}
+        {items.length > 0 && (
+          <View style={styles.footer}>
+            <Button title="Avançar" onPress={handleAdvance} />
+          </View>
         )}
       </ScrollView>
     </View>
@@ -196,4 +268,14 @@ const styles = StyleSheet.create({
     fontSize: fontSize.lg,
     fontWeight: "600",
   },
+  itemsSection: {
+    marginTop: spacing.xl,
+    gap: spacing.md,
+  },
+  itemsTitle: {
+    color: colors.primary,
+    fontWeight: "600",
+    fontSize: fontSize.lg,
+  },
+  footer: { paddingTop: 24 },
 });
